@@ -1,0 +1,9 @@
+gitPython
+psutil
+PyYAML
+dill
+numpy
+scipy
+pandas
+matplotlib
+boto3
