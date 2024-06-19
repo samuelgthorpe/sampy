@@ -23,18 +23,11 @@ import pkg_resources
 import pytz
 from datetime import datetime
 import time
-from sampy import BASE_DIR
-
-
-# # Globals
-# -----------------------------------------------------|
-run_dir = os.path.join(BASE_DIR, 'run')
-log_dir = os.path.join(run_dir, 'logs')
 
 
 # # Primary init log method
 # -----------------------------------------------------|
-def init_log(console_level="INFO", file_level="INFO", **kwrgs):
+def init_log(base_dir, console_level="INFO", file_level="INFO", **kwrgs):
     """Initialize logger.
 
     Args:
@@ -45,9 +38,11 @@ def init_log(console_level="INFO", file_level="INFO", **kwrgs):
     Returns:
         root logger
     """
+    run_dir = os.path.join(base_dir, 'run')
+    log_dir = os.path.join(run_dir, 'logs')
     logger = logging.getLogger("root")
     logger.setLevel(logging.DEBUG)
-    _setup_record_factory()
+    _setup_record_factory(base_dir)
 
     # setup console handler
     handlers = [_get_console_handler(console_level)]
@@ -65,18 +60,18 @@ def init_log(console_level="INFO", file_level="INFO", **kwrgs):
         logger.addHandler(handler)
 
     # log header and return
-    _log_header(logger, dt_utc)
+    _log_header(logger, base_dir, dt_utc)
     return logger
 
 
-def _setup_record_factory():
+def _setup_record_factory(base_dir):
     """Return custom record factory for formatting logger."""
     old_factory = logging.getLogRecordFactory()
 
     def record_factory(*args, **kwargs):
         """Set up new record factory."""
         record = old_factory(*args, **kwargs)
-        mod_path = record.pathname.split(BASE_DIR)[-1]
+        mod_path = record.pathname.split(base_dir)[-1]
         record.module_path = mod_path.replace(os.sep, '.')[1:]
         return record
 
@@ -105,14 +100,14 @@ def _get_file_handler(log_filename, file_level="DEBUG"):
     return fh
 
 
-def _log_header(logger, dt_utc):
+def _log_header(logger, base_dir, dt_utc):
     """Write out log header."""
     logger.info('Logger initialized')
     logger.info(f'Batch Start (UTC): {dt_utc}')
 
     _log_platform(logger)
     _log_python(logger)
-    _log_repo(logger, BASE_DIR)
+    _log_repo(logger, base_dir)
 
     # log dependencies
     pkg = [(d.project_name, d.version) for d in pkg_resources.working_set]
