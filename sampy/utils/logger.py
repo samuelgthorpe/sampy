@@ -138,7 +138,7 @@ def _log_repo(logger, repo_dir=None):
         logger.info(f"The current git commit is: {_git['commit']}")
         logger.info(f"The current git commit user is: {_git['author']}")
     except Exception as err:
-        logger.warning(err)
+        logger.warning(f'Error logging .git repo: {err}')
 
 
 def git_info(repo_dir):
