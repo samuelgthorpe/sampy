@@ -131,11 +131,14 @@ def _log_python(logger):
 
 def _log_repo(logger, repo_dir=None):
     """Log git info."""
-    _git = git_info(repo_dir)
-    logger.info(f"The current git repo is: {_git['repo']}")
-    logger.info(f"The current git branch is: {_git['branch']}")
-    logger.info(f"The current git commit is: {_git['commit']}")
-    logger.info(f"The current git commit user is: {_git['author']}")
+    try:
+        _git = git_info(repo_dir)
+        logger.info(f"The current git repo is: {_git['repo']}")
+        logger.info(f"The current git branch is: {_git['branch']}")
+        logger.info(f"The current git commit is: {_git['commit']}")
+        logger.info(f"The current git commit user is: {_git['author']}")
+    except Exception as err:
+        logger.warning(err)
 
 
 def git_info(repo_dir):

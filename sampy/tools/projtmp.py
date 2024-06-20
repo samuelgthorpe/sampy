@@ -47,7 +47,7 @@ def init_project_dir(proj_dir, repo_dir, sync=False):
     else:
         shutil.copytree(DEFAULT_LOCAL_TEMPLATE, repo_dir) 
 
-    # delete .git directory
+    # delete template .git directory
     template_git_dir = join(repo_dir, '.git')
     shutil.rmtree(template_git_dir)   
 
