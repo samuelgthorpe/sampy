@@ -18,12 +18,16 @@ from os.path import basename, join
 import argparse
 import shutil
 import subprocess
+import json
+import requests
+from git import Repo
 
 
 # # Globals
 # -----------------------------------------------------|
 DEFAULT_PROJECT_DIR = '/home/sam/Projects'
 DEFAULT_LOCAL_TEMPLATE = '/home/sam/Repos/st-experiment-template'
+REMOTE_URL = 'ssh://git@github.com:samuelgthorpe'
 
 
 # # Defs
@@ -35,7 +39,7 @@ def main(args):
 
     init_project_dir(proj_dir, repo_dir, sync=args.sync)
     _update_template(repo_dir, args.project_name)
-    _init_repo(repo_dir, sync=args.sync)
+    _init_repo(args.project_name, repo_dir, sync=args.sync)
     _init_venv(proj_dir)
 
 
@@ -81,15 +85,43 @@ def _update_template(repo_dir, project_name):
         op = term2.communicate(find_out)
 
 
-def _init_repo(repo_dir, sync=False):
+def _init_repo(project_name, repo_dir, sync=False):
     """Add method docstring."""
-    from sampy.common import keyboard
-    keyboard(locals(), globals())
+    repo = Repo.init(repo_dir)
+    repo.git.add(all=True)
+    repo.git.commit('-m', 'init project template')
 
+    if args.sync:
+        _init_github_repo(project_name)
+        repo_url = f'{REMOTE_URL}/{project_name}'
+        remote = repo.create_remote('origin', url=repo_url)
+        remote.push(refspec='main:main')
+
+def _init_github_repo(project_name):
+    """Add method docstring."""
+    request_url = 'https://api.github.com/user/repos'
+    payload = {
+        "name": project_name,
+        "homepage": "https://github.com",
+        "private": True,
+        "has_issues": True,
+        "has_wiki": True
+        }
+
+    req = requests.post(request_url, 
+        auth=('samuelgthorpe', os.environ["GITHUB_API_TOKEN"]),
+        data=json.dumps(payload))
+
+    if req.status_code != 201:
+        print(req)
+        raise Exception('Something went wrong')
+
+    return req
 
 def _init_venv(proj_dir, sync=False):
     """Add method docstring."""
-    pass
+    from sampy.common import keyboard
+    keyboard(locals(), globals())
 
 
 # # Main Entry
