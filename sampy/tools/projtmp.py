@@ -27,7 +27,7 @@ from git import Repo
 # -----------------------------------------------------|
 DEFAULT_PROJECT_DIR = '/home/sam/Projects'
 DEFAULT_LOCAL_TEMPLATE = '/home/sam/Repos/st-experiment-template'
-REMOTE_URL = 'ssh://git@github.com:samuelgthorpe'
+REMOTE_URL = 'git@github.com:samuelgthorpe'
 
 
 # # Defs
@@ -37,17 +37,17 @@ def main(args):
     proj_dir = join(args.project_dir, args.project_name)
     repo_dir = join(proj_dir, args.project_name)
 
-    init_project_dir(proj_dir, repo_dir, sync=args.sync)
+    init_project_dir(proj_dir, repo_dir, args.project_name, sync=args.sync)
     _update_template(repo_dir, args.project_name)
     _init_repo(args.project_name, repo_dir, sync=args.sync)
-    _init_venv(proj_dir)
+    _init_venv(proj_dir, args.project_name)
 
 
-def init_project_dir(proj_dir, repo_dir, sync=False):
+def init_project_dir(proj_dir, repo_dir, proj_name, sync=False):
     """Add method docstring."""
     os.makedirs(proj_dir)
     if sync:
-        _pull_template(repo_dir)
+        _pull_template(proj_dir, repo_dir, proj_name)
     else:
         shutil.copytree(DEFAULT_LOCAL_TEMPLATE, repo_dir) 
 
@@ -56,10 +56,11 @@ def init_project_dir(proj_dir, repo_dir, sync=False):
     shutil.rmtree(template_git_dir)   
 
 
-def _pull_template(repo_dir):
+def _pull_template(proj_dir, repo_dir, proj_name):
     """Pull template from github."""
-    from sampy.common import keyboard
-    keyboard(locals(), globals())
+    os.makedirs(repo_dir)
+    template_url = f'{REMOTE_URL}/st-experiment-template.git'
+    repo = Repo.clone_from(template_url, repo_dir, branch='main')
 
 
 def _update_template(repo_dir, project_name):
@@ -91,9 +92,10 @@ def _init_repo(project_name, repo_dir, sync=False):
     repo.git.add(all=True)
     repo.git.commit('-m', 'init project template')
 
+    # if specified, create new github repo and sync
     if args.sync:
         _init_github_repo(project_name)
-        repo_url = f'{REMOTE_URL}/{project_name}'
+        repo_url = f'{REMOTE_URL}/{project_name}.git'
         remote = repo.create_remote('origin', url=repo_url)
         remote.push(refspec='main:main')
 
@@ -118,10 +120,19 @@ def _init_github_repo(project_name):
 
     return req
 
-def _init_venv(proj_dir, sync=False):
+def _init_venv(proj_dir, proj_name):
     """Add method docstring."""
-    from sampy.common import keyboard
-    keyboard(locals(), globals())
+    venv_name = f'.venv-{proj_name}'
+    current = os.getcwd()
+    os.chdir(proj_dir)
+    
+    # create venv and upgrade pip
+    subprocess.call(['python3', '-m', 'venv', venv_name])
+    subprocess.call([
+        f'{proj_dir}/{venv_name}/bin/pip', 
+        'install', '--upgrade', 'pip'])
+
+    os.chdir(current)
 
 
 # # Main Entry
