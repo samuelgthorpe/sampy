@@ -38,13 +38,21 @@ def main(args):
     repo_dir = join(proj_dir, args.project_name)
 
     init_project_dir(proj_dir, repo_dir, args.project_name, sync=args.sync)
-    _update_template(repo_dir, args.project_name)
-    _init_repo(args.project_name, repo_dir, sync=args.sync)
-    _init_venv(proj_dir, args.project_name)
+    update_template(repo_dir, args.project_name)
+    init_repo(args.project_name, repo_dir, sync=args.sync)
+    init_venv(proj_dir, args.project_name)
 
 
 def init_project_dir(proj_dir, repo_dir, proj_name, sync=False):
-    """Add method docstring."""
+    """Initiate project directory.
+    
+    Args:
+        proj_dir (str, path): Path to save project
+        repo_dir (str, path): Path to repo within project 
+        proj_name (str): Project name (use hyphens as sep!)
+        sync (bool, optional): if True then pull template from github and sync 
+                               new project repo to github as well.
+    """
     os.makedirs(proj_dir)
     if sync:
         _pull_template(proj_dir, repo_dir, proj_name)
@@ -60,11 +68,19 @@ def _pull_template(proj_dir, repo_dir, proj_name):
     """Pull template from github."""
     os.makedirs(repo_dir)
     template_url = f'{REMOTE_URL}/st-experiment-template.git'
-    repo = Repo.clone_from(template_url, repo_dir, branch='main')
+    Repo.clone_from(template_url, repo_dir, branch='main')
 
 
-def _update_template(repo_dir, project_name):
-    """Add method docstring."""
+def update_template(repo_dir, project_name):
+    """Update template.
+    
+    Replaces all occurences of template name with project name. 
+    Same for references to snake_case template src module.
+    
+    Args:
+        repo_dir (str, path): Path to repo within project 
+        proj_name (str): Project name (use hyphens as sep!)
+    """
     template_name = basename(DEFAULT_LOCAL_TEMPLATE)
     template_src_dir = template_name.replace('-', '_')
     template_src_pth = join(repo_dir, template_src_dir)
@@ -83,24 +99,42 @@ def _update_template(repo_dir, project_name):
         term2 = subprocess.Popen(
             ["xargs", "sed", "-i", f"s/{to_replace}/{replace_with}/g"], 
             stdin=subprocess.PIPE)
-        op = term2.communicate(find_out)
+        term2.communicate(find_out)  # noqa: F841
 
 
-def _init_repo(project_name, repo_dir, sync=False):
-    """Add method docstring."""
+def init_repo(project_name, repo_dir, sync=False):
+    """Init git repository.
+    
+    Args:
+        proj_name (str): Project name (use hyphens as sep!)
+        repo_dir (str, path): Path to repo within project 
+        sync (bool, optional): if True then pull template from github and sync 
+                               new project repo to github as well.
+    """
     repo = Repo.init(repo_dir)
     repo.git.add(all=True)
     repo.git.commit('-m', 'init project template')
 
     # if specified, create new github repo and sync
     if args.sync:
-        _init_github_repo(project_name)
+        init_github_repo(project_name)
         repo_url = f'{REMOTE_URL}/{project_name}.git'
         remote = repo.create_remote('origin', url=repo_url)
         remote.push(refspec='main:main')
 
-def _init_github_repo(project_name):
-    """Add method docstring."""
+
+def init_github_repo(project_name):
+    """Init repo on Github.
+    
+    Args:
+        proj_name (str): Project name (use hyphens as sep!)
+    
+    Returns:
+        req (request object): result of github API call
+    
+    Raises:
+        Exception: Description
+    """
     request_url = 'https://api.github.com/user/repos'
     payload = {
         "name": project_name,
@@ -110,7 +144,8 @@ def _init_github_repo(project_name):
         "has_wiki": True
         }
 
-    req = requests.post(request_url, 
+    req = requests.post(
+        request_url, 
         auth=('samuelgthorpe', os.environ["GITHUB_API_TOKEN"]),
         data=json.dumps(payload))
 
@@ -120,8 +155,14 @@ def _init_github_repo(project_name):
 
     return req
 
-def _init_venv(proj_dir, proj_name):
-    """Add method docstring."""
+
+def init_venv(proj_dir, proj_name):
+    """Init virtual environment.
+    
+    Args:
+        proj_dir (str, path): Path to save project
+        proj_name (str): Project name (use hyphens as sep!)
+    """
     venv_name = f'.venv-{proj_name}'
     current = os.getcwd()
     os.chdir(proj_dir)
