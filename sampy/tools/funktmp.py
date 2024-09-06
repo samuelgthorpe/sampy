@@ -1,9 +1,6 @@
-#! /usr/bin/python3
 """
-funktmp.py funkname.py
-
-
 Create a file with the name "funkname.py" from a template.
+
 Save the corresponding file in the current directory, and open it in
 sublime.
 
@@ -40,8 +37,7 @@ from datetime import datetime
 # -----------------------------------------------------|
 def build_template(fn):
     #  pylint: disable=invalid-name
-    """ build the class template
-    """
+    """Build the class template."""
     lines = []
     lines.append('"""\n')
     lines.append('Insert description.\n\n')
@@ -52,7 +48,7 @@ def build_template(fn):
     bnk = "{}{}{}\n\n\n".format("# ", "-" * 76, "|")
     smbnk = "{}{}{}\n".format("# ", "-" * 53, "|")
     for n in range(1):
-        lines.append(hdl[n-1])
+        lines.append(hdl[n - 1])
         lines.append(bnk)
     now = datetime.now()
     lines.append('Written {}\n'.format(now.strftime("%B %d, %Y")))
@@ -88,9 +84,7 @@ def build_template(fn):
 
 def write_template(lines, args):
     #  pylint: disable=invalid-name
-    """ Write output file & open
-        'gnome-terminal', '-e', '/opt/sublime_text/sublime_text {}'.format(fn)
-    """
+    """Write output file & open."""
     fn = args[1]
     txt = open(fn, 'w')
     txt.write(''.join(lines))

@@ -45,23 +45,23 @@ def main(args):
 
 def init_project_dir(proj_dir, repo_dir, proj_name, sync=False):
     """Initiate project directory.
-    
+
     Args:
         proj_dir (str, path): Path to save project
-        repo_dir (str, path): Path to repo within project 
+        repo_dir (str, path): Path to repo within project
         proj_name (str): Project name (use hyphens as sep!)
-        sync (bool, optional): if True then pull template from github and sync 
+        sync (bool, optional): if True then pull template from github and sync
                                new project repo to github as well.
     """
     os.makedirs(proj_dir)
     if sync:
         _pull_template(proj_dir, repo_dir, proj_name)
     else:
-        shutil.copytree(DEFAULT_LOCAL_TEMPLATE, repo_dir) 
+        shutil.copytree(DEFAULT_LOCAL_TEMPLATE, repo_dir)
 
     # delete template .git directory
     template_git_dir = join(repo_dir, '.git')
-    shutil.rmtree(template_git_dir)   
+    shutil.rmtree(template_git_dir)
 
 
 def _pull_template(proj_dir, repo_dir, proj_name):
@@ -73,12 +73,12 @@ def _pull_template(proj_dir, repo_dir, proj_name):
 
 def update_template(repo_dir, project_name):
     """Update template.
-    
-    Replaces all occurences of template name with project name. 
+
+    Replaces all occurences of template name with project name.
     Same for references to snake_case template src module.
-    
+
     Args:
-        repo_dir (str, path): Path to repo within project 
+        repo_dir (str, path): Path to repo within project
         proj_name (str): Project name (use hyphens as sep!)
     """
     template_name = basename(DEFAULT_LOCAL_TEMPLATE)
@@ -92,23 +92,23 @@ def update_template(repo_dir, project_name):
     zipd = [(template_src_dir, src_dir), (template_name, project_name)]
     for to_replace, replace_with in zipd:
         term = subprocess.Popen(
-            ["find", repo_dir, "-type", "f"], 
+            ["find", repo_dir, "-type", "f"],
             stdout=subprocess.PIPE
             )
         find_out = term.communicate()[0]
         term2 = subprocess.Popen(
-            ["xargs", "sed", "-i", f"s/{to_replace}/{replace_with}/g"], 
+            ["xargs", "sed", "-i", f"s/{to_replace}/{replace_with}/g"],
             stdin=subprocess.PIPE)
         term2.communicate(find_out)  # noqa: F841
 
 
 def init_repo(project_name, repo_dir, sync=False):
     """Init git repository.
-    
+
     Args:
         proj_name (str): Project name (use hyphens as sep!)
-        repo_dir (str, path): Path to repo within project 
-        sync (bool, optional): if True then pull template from github and sync 
+        repo_dir (str, path): Path to repo within project
+        sync (bool, optional): if True then pull template from github and sync
                                new project repo to github as well.
     """
     repo = Repo.init(repo_dir)
@@ -125,13 +125,13 @@ def init_repo(project_name, repo_dir, sync=False):
 
 def init_github_repo(project_name):
     """Init repo on Github.
-    
+
     Args:
         proj_name (str): Project name (use hyphens as sep!)
-    
+
     Returns:
         req (request object): result of github API call
-    
+
     Raises:
         Exception: Description
     """
@@ -145,7 +145,7 @@ def init_github_repo(project_name):
         }
 
     req = requests.post(
-        request_url, 
+        request_url,
         auth=('samuelgthorpe', os.environ["GITHUB_API_TOKEN"]),
         data=json.dumps(payload))
 
@@ -158,7 +158,7 @@ def init_github_repo(project_name):
 
 def init_venv(proj_dir, proj_name):
     """Init virtual environment.
-    
+
     Args:
         proj_dir (str, path): Path to save project
         proj_name (str): Project name (use hyphens as sep!)
@@ -166,11 +166,11 @@ def init_venv(proj_dir, proj_name):
     venv_name = f'.venv-{proj_name}'
     current = os.getcwd()
     os.chdir(proj_dir)
-    
+
     # create venv and upgrade pip
     subprocess.call(['python3', '-m', 'venv', venv_name])
     subprocess.call([
-        f'{proj_dir}/{venv_name}/bin/pip', 
+        f'{proj_dir}/{venv_name}/bin/pip',
         'install', '--upgrade', 'pip'])
 
     os.chdir(current)
@@ -181,16 +181,16 @@ def init_venv(proj_dir, proj_name):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        'project_name', 
+        'project_name',
         type=str,
         help='project name (use hyphens as sep)')
     parser.add_argument(
-        '-project_dir', 
+        '-project_dir',
         type=str,
         help='project directory',
         default=DEFAULT_PROJECT_DIR)
     parser.add_argument(
-        '--sync', 
+        '--sync',
         action="store_true",
         help='use github template and push new project')
     args = parser.parse_args()

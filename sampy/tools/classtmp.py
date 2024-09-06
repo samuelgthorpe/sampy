@@ -1,8 +1,6 @@
-#!/usr/bin/python3
 """
-classtmp.py funkname.py
-
 Create a file with the name "funkname.py" from a class template.
+
 Save the corresponding file in the current directory, and open it in
 sublime.
 
@@ -39,9 +37,7 @@ import re
 # # Defs
 # -----------------------------------------------------|
 def build_template(fn):
-    #  pylint: disable=invalid-name
-    """ build the class template
-    """
+    """Build the class template."""
     cn = re.sub('.py', '', fn).split('_')
     cn = ''.join([c.capitalize() for c in cn if c])
     lines = []
@@ -92,10 +88,7 @@ def build_template(fn):
 
 
 def write_template(lines, args):
-    #  pylint: disable=invalid-name
-    """ Write output file & open
-        'gnome-terminal', '-e', '/opt/sublime_text/sublime_text {}'.format(fn)
-    """
+    """Write output file & open."""
     fn = args[1]
     txt = open(fn, 'w')
     txt.write(''.join(lines))
