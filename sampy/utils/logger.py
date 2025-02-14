@@ -24,6 +24,7 @@ import pytz
 from datetime import datetime
 import time
 import functools
+import json
 import traceback
 
 
@@ -95,8 +96,9 @@ def _get_file_handler(log_filename, file_level="DEBUG"):
     """Create file handler at lower level."""
     fh = logging.FileHandler(log_filename)
     fh.setLevel(file_level)
-    fh_formatter = logging.Formatter(
-        '%(asctime)s : %(levelname)s : %(name)s : %(message)s')
+    # fh_formatter = logging.Formatter(
+    #     '%(asctime)s : %(levelname)s : %(name)s : %(message)s')
+    fh_formatter = JsonFormatter()
     fh_formatter.converter = time.gmtime
     fh.setFormatter(fh_formatter)
     return fh
@@ -180,6 +182,26 @@ def log_exceptions(logger=None, raise_exception=True):
             except Exception as e:
                 logger.error(f"{func.__name__}: {e}", exc_info=True)
                 if raise_exception:
-                    raise e
+                    raise e from None
         return wrapper
     return decorator
+
+
+# # Json Log Formatter
+# -----------------------------------------------------|
+class JsonFormatter(logging.Formatter):
+    """Custom formatter to output logs as JSON."""
+
+    def format(self, record):
+        log_message = {
+            "timestamp": datetime.utcnow().isoformat(),
+            "level": record.levelname,
+            "message": record.getMessage(),
+            "module": record.module_path,
+            "funcName": record.funcName,
+            "lineNo": record.lineno
+        }
+        # Include exception details if any
+        if record.exc_info:
+            log_message["exception"] = self.formatException(record.exc_info)
+        return json.dumps(log_message)
