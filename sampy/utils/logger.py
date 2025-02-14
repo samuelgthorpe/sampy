@@ -23,6 +23,8 @@ import pkg_resources
 import pytz
 from datetime import datetime
 import time
+import functools
+import traceback
 
 
 # # Primary init log method
@@ -162,3 +164,22 @@ def git_info(repo_dir):
                 'author': author}
     except git.exc.InvalidGitRepositoryError:
         return None
+
+
+# # Log Exception Decoratpr
+# -----------------------------------------------------|
+def log_exceptions(logger=None, raise_exception=True):
+    """Return decorator to wrap method in try catch to log exceptions, etc."""
+    logger = logger or logging.getLogger()
+
+    def decorator(func):
+        @functools.wraps(func)  # Preserve function metadata
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                logger.error(f"{func.__name__}: {e}", exc_info=True)
+                if raise_exception:
+                    raise e
+        return wrapper
+    return decorator
