@@ -25,7 +25,7 @@ from datetime import datetime
 import time
 import functools
 import json
-import traceback
+import pandas as pd
 
 
 # # Primary init log method
@@ -205,3 +205,12 @@ class JsonFormatter(logging.Formatter):
         if record.exc_info:
             log_message["exception"] = self.formatException(record.exc_info)
         return json.dumps(log_message)
+
+
+# # Json Log Reader
+# -----------------------------------------------------|
+def read_log(log_file):
+    """Read json formatted log file in dataframe."""
+    with open(log_file, 'r') as fh:
+        log_str = f'[{",".join(fh.readlines())}]'
+        return pd.DataFrame(json.loads(log_str))
