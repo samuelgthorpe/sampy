@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Create a file with the name "funkname.py" from a class template.
 

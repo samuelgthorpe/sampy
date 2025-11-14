@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Create a file with the name "funkname.py" from a template.
 
@@ -90,9 +91,6 @@ def write_template(lines, args):
     txt.write(''.join(lines))
     txt.close()
     call(['chmod', '+x', fn])
-    # if '-blind' not in args:
-    #     commands = ['gnome-terminal', '-e', 'subl {}'.format(fn)]
-    #     call(commands)
 
 
 # # Main Entry

@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 """
 Project template generator.
 
@@ -16,6 +16,7 @@ By Samuel Thorpe
 import os
 from os.path import basename, join
 import argparse
+from pathlib import Path
 import shutil
 import subprocess
 import json
@@ -25,8 +26,8 @@ from git import Repo
 
 # # Globals
 # -----------------------------------------------------|
-DEFAULT_PROJECT_DIR = '/home/sam/Projects'
-DEFAULT_LOCAL_TEMPLATE = '/home/sam/Repos/st-experiment-template'
+DEFAULT_PROJECT_DIR = join(Path.home(), 'Projects')
+DEFAULT_LOCAL_TEMPLATE = join(Path.home(), 'Repos', 'st-experiment-template')
 REMOTE_URL = 'git@github.com:samuelgthorpe'
 
 
@@ -37,25 +38,28 @@ def main(args):
     proj_dir = join(args.project_dir, args.project_name)
     repo_dir = join(proj_dir, args.project_name)
 
-    init_project_dir(proj_dir, repo_dir, args.project_name, sync=args.sync)
+    init_project_dir(proj_dir, repo_dir, args)
     update_template(repo_dir, args.project_name)
-    init_repo(args.project_name, repo_dir, sync=args.sync)
+    init_repo(repo_dir, args)
     init_venv(proj_dir, args.project_name)
 
 
-def init_project_dir(proj_dir, repo_dir, proj_name, sync=False):
+def init_project_dir(proj_dir, repo_dir, args):
     """Initiate project directory.
 
     Args:
         proj_dir (str, path): Path to save project
         repo_dir (str, path): Path to repo within project
-        proj_name (str): Project name (use hyphens as sep!)
-        sync (bool, optional): if True then pull template from github and sync
-                               new project repo to github as well.
+        args.project_name (str): project name
+        args.sync (bool, optional): 
+            if True then pull template from github and sync new project repo 
+            to github as well.
+        args.github_user (str): github username (if args.sync is True)
+        args.github_api_token (str): github api token (if args.sync is True)
     """
     os.makedirs(proj_dir)
-    if sync:
-        _pull_template(proj_dir, repo_dir, proj_name)
+    if args.sync:
+        _pull_template(proj_dir, repo_dir, args.project_name)
     else:
         shutil.copytree(DEFAULT_LOCAL_TEMPLATE, repo_dir)
 
@@ -79,7 +83,7 @@ def update_template(repo_dir, project_name):
 
     Args:
         repo_dir (str, path): Path to repo within project
-        proj_name (str): Project name (use hyphens as sep!)
+        project_name (str): Project name (use hyphens as sep!)
     """
     template_name = basename(DEFAULT_LOCAL_TEMPLATE)
     template_src_dir = template_name.replace('-', '_')
@@ -102,14 +106,18 @@ def update_template(repo_dir, project_name):
         term2.communicate(find_out)  # noqa: F841
 
 
-def init_repo(project_name, repo_dir, sync=False):
+def init_repo(repo_dir, args):
     """Init git repository.
 
     Args:
         proj_name (str): Project name (use hyphens as sep!)
         repo_dir (str, path): Path to repo within project
-        sync (bool, optional): if True then pull template from github and sync
-                               new project repo to github as well.
+        args.project_name (str): project name
+        args.sync (bool, optional): 
+            if True then pull template from github and sync new project repo to 
+            github as well.
+        args.github_user (str): github username (if args.sync is True)
+        args.github_api_token (str): github api token (if args.sync is True)
     """
     repo = Repo.init(repo_dir)
     repo.git.add(all=True)
@@ -117,17 +125,20 @@ def init_repo(project_name, repo_dir, sync=False):
 
     # if specified, create new github repo and sync
     if args.sync:
-        init_github_repo(project_name)
-        repo_url = f'{REMOTE_URL}/{project_name}.git'
+        init_github_repo(args.project_name, args.github_user, 
+                         args.github_api_token)
+        repo_url = f'{REMOTE_URL}/{args.project_name}.git'
         remote = repo.create_remote('origin', url=repo_url)
         remote.push(refspec='main:main')
 
 
-def init_github_repo(project_name):
+def init_github_repo(project_name, github_user, github_api_token):
     """Init repo on Github.
 
     Args:
         proj_name (str): Project name (use hyphens as sep!)
+        github_user (str): github username
+        github_api_token (str): github api token
 
     Returns:
         req (request object): result of github API call
@@ -143,10 +154,10 @@ def init_github_repo(project_name):
         "has_issues": True,
         "has_wiki": True
         }
-
+    
     req = requests.post(
         request_url,
-        auth=('samuelgthorpe', os.environ["GITHUB_API_TOKEN"]),
+        auth=(github_user, github_api_token),
         data=json.dumps(payload))
 
     if req.status_code != 201:
@@ -163,14 +174,13 @@ def init_venv(proj_dir, proj_name):
         proj_dir (str, path): Path to save project
         proj_name (str): Project name (use hyphens as sep!)
     """
-    venv_name = f'.venv-{proj_name}'
     current = os.getcwd()
-    os.chdir(proj_dir)
+    os.chdir(join(proj_dir, proj_name))
 
     # create venv and upgrade pip
-    subprocess.call(['python3', '-m', 'venv', venv_name])
+    subprocess.call(['python', '-m', 'venv', '.venv'])
     subprocess.call([
-        f'{proj_dir}/{venv_name}/bin/pip',
+        join(proj_dir, proj_name, '.venv', 'bin', 'pip'),
         'install', '--upgrade', 'pip'])
 
     os.chdir(current)
@@ -193,5 +203,15 @@ if __name__ == "__main__":
         '--sync',
         action="store_true",
         help='use github template and push new project')
+    parser.add_argument(
+        '-github_api_token',
+        type=str,
+        help='github_api_token',
+        default=os.environ.get("GITHUB_API_TOKEN"))
+    parser.add_argument(
+        '-github_user',
+        type=str,
+        help='github_user',
+        default=os.environ.get("GITHUB_USER"))
     args = parser.parse_args()
     main(args)
