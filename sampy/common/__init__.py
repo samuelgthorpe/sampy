@@ -20,7 +20,7 @@ import code
 import inspect
 import time
 import numbers
-import numpy as np
+import pdb
 
 
 # # General Exception Class
@@ -32,6 +32,8 @@ CommonException = type('CommonException', (Exception,), {})
 # -----------------------------------------------------|
 def keyboard(loc, glob):
     """Mimics Matlab's keyboard, but with locals, globals as inputs."""
+    # frame = inspect.currentframe().f_back
+    # pdb.Pdb().set_trace(frame)
     tag = '\n\n>>> (InteractiveConsole) : {} : line {} : {} >>>'.\
         format(*check_stack_phrase(inspect.stack()))
     code.interact(banner=tag, local={**loc, **glob})
@@ -158,54 +160,6 @@ def info(obj, spacing=10):
     print("\n".join(print_info) + "\n")
 
 
-# # Check Approximate Equality
-# -----------------------------------------------------|
-def check_equality(x, y, tol=np.finfo(np.float32).eps):
-    """Check approximate equality for general data types.
-
-    NOTE: this will only work with iterables (i.e. which have a
-          '__iter__' method) for which the len() function can be
-          used to determine size (i.e. no generators)
-    """
-    # # check objects are of comparable type
-    if isinstance(x, numbers.Number):
-        assert isinstance(x, numbers.Number)
-    else:
-        assert type(x) is type(y), \
-            "MISMATCH: ({type(x)}) {x} != ({type(y)}) {y}"
-
-    # # check exact/approximate equality as appropriate
-    if isinstance(x, float) and np.isnan(x):
-        assert np.isnan(y)
-    if isinstance(x, float) and np.isinf(x):
-        assert x == y
-    elif isinstance(x, numbers.Number):
-        assert np.abs(x - y) < tol
-    elif isinstance(x, (str, bool)):
-        assert x == y
-    elif hasattr(x, '__iter__'):
-        assert hasattr(y, '__iter__') and len(x) == len(y)
-        for x_itr, y_itr in zip(x, y):
-            check_equality(x_itr, y_itr)
-
-
-def _cmp_str(x, y):
-    """Compare string."""
-    return f"MISMATCH: ({type(x)}) {x} != ({type(y)}) {y}"
-
-
-# # Common Time Series Manipulation
-# -----------------------------------------------------|
-def refine_series(coarse_ts, refined_ts):
-    """Refine a coarse time series to finer resolution."""
-    ridx = np.zeros(refined_ts.shape[0]).astype(int)
-    for idx, tim in enumerate(refined_ts):
-        leading_samps = np.where(coarse_ts <= tim)[0]
-        if leading_samps.shape[0]:
-            ridx[idx] = leading_samps[-1]
-    return ridx
-
-
 # # Timers
 # -----------------------------------------------------|
 class LoopStatusTimer():
@@ -244,9 +198,3 @@ class LoopStatusTimer():
         out = method(*args, **kwrgs)
         print('\n{} sec elapsed'.format(time.time() - start))
         return out
-
-
-# # Main Entry
-# -----------------------------------------------------|
-if __name__ == '__main__':
-    pass

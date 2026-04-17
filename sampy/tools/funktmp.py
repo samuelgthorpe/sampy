@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Create a file with the name "funkname.py" from a template.
 
@@ -90,7 +90,7 @@ def write_template(lines, args):
     txt = open(fn, 'w')
     txt.write(''.join(lines))
     txt.close()
-    call(['chmod', '+x', fn])
+    # call(['chmod', '+x', fn])
 
 
 # # Main Entry

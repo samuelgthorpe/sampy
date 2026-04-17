@@ -40,7 +40,7 @@ def prettify(axi, grid_ax='y', grid_alpha=0.25):  # pragma: no cover
     axi.spines['right'].set_visible(False)
     axi.spines['left'].set_position(('outward', 10))
     axi.tick_params(right=False, left=False, top=False, bottom=False)
-    axi.grid(b=True, which='both', axis=grid_ax, alpha=grid_alpha, ls='solid')
+    axi.grid(which='both', axis=grid_ax, alpha=grid_alpha, ls='solid')
 
 
 def label_subplot(axi, tag, ptag=None, fontsiz=17, xbuff=(-0.1, 0.4)):

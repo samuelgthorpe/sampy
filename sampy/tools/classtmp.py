@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 """
 Create a file with the name "funkname.py" from a class template.
 
@@ -72,8 +72,7 @@ def build_template(fn):
     lines.append('# # Main Class\n')
     lines.append('%s' % smbnk)
     lines.append('class {}:\n'.format(cn))
-    lines.append('    """ class object description\n')
-    lines.append('    """\n')
+    lines.append('    """Class object description."""\n\n')
     lines.append('    def __init__(self):\n')
     lines.append('        """Initialize class."""\n')
     lines.append('        from sampy.common import keyboard\n')
@@ -94,10 +93,6 @@ def write_template(lines, args):
     txt = open(fn, 'w')
     txt.write(''.join(lines))
     txt.close()
-    call(['chmod', '+x', fn])
-    # if '-blind' not in args:
-    #     commands = ['gnome-terminal', '-e', 'subl {}'.format(fn)]
-    #     call(commands)
 
 
 # # Main Entry

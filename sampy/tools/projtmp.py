@@ -26,40 +26,40 @@ from git import Repo
 
 # # Globals
 # -----------------------------------------------------|
+TEMPLATE_REMOTE_URL = 'git@github.com:samuelgthorpe'
+PUSH_REMOTE_URL = 'git@github.com:samuelgthorpe-ns'
 DEFAULT_PROJECT_DIR = join(Path.home(), 'Projects')
-DEFAULT_LOCAL_TEMPLATE = join(Path.home(), 'Repos', 'st-experiment-template')
-REMOTE_URL = 'git@github.com:samuelgthorpe'
+DEFAULT_LOCAL_TEMPLATE = join(Path.home(), 'Templates',
+                              'st-experiment-template')
+
 
 
 # # Defs
 # -----------------------------------------------------|
 def main(args):
     """Run main method."""
-    proj_dir = join(args.project_dir, args.project_name)
-    repo_dir = join(proj_dir, args.project_name)
+    repo_dir = join(args.project_dir, args.project_name)
 
-    init_project_dir(proj_dir, repo_dir, args)
+    init_repo_dir(repo_dir, args)
     update_template(repo_dir, args.project_name)
     init_repo(repo_dir, args)
-    init_venv(proj_dir, args.project_name)
+    init_venv(repo_dir)
 
 
-def init_project_dir(proj_dir, repo_dir, args):
+def init_repo_dir(repo_dir, args):
     """Initiate project directory.
 
     Args:
-        proj_dir (str, path): Path to save project
-        repo_dir (str, path): Path to repo within project
+        repo_dir (str, path): Path to repo
         args.project_name (str): project name
-        args.sync (bool, optional): 
-            if True then pull template from github and sync new project repo 
+        args.sync (bool, optional):
+            if True then pull template from github and sync new project repo
             to github as well.
         args.github_user (str): github username (if args.sync is True)
         args.github_api_token (str): github api token (if args.sync is True)
     """
-    os.makedirs(proj_dir)
     if args.sync:
-        _pull_template(proj_dir, repo_dir, args.project_name)
+        _pull_template(repo_dir, args.project_name)
     else:
         shutil.copytree(DEFAULT_LOCAL_TEMPLATE, repo_dir)
 
@@ -68,11 +68,11 @@ def init_project_dir(proj_dir, repo_dir, args):
     shutil.rmtree(template_git_dir)
 
 
-def _pull_template(proj_dir, repo_dir, proj_name):
+def _pull_template(repo_dir, project_name):
     """Pull template from github."""
     os.makedirs(repo_dir)
-    template_url = f'{REMOTE_URL}/st-experiment-template.git'
-    Repo.clone_from(template_url, repo_dir, branch='main')
+    template_url = f'{TEMPLATE_REMOTE_URL}/st-experiment-template.git'
+    Repo.clone_from(template_url, repo_dir, branch='ns-env')
 
 
 def update_template(repo_dir, project_name):
@@ -82,7 +82,7 @@ def update_template(repo_dir, project_name):
     Same for references to snake_case template src module.
 
     Args:
-        repo_dir (str, path): Path to repo within project
+        repo_dir (str, path): Path to project repo
         project_name (str): Project name (use hyphens as sep!)
     """
     template_name = basename(DEFAULT_LOCAL_TEMPLATE)
@@ -110,11 +110,10 @@ def init_repo(repo_dir, args):
     """Init git repository.
 
     Args:
-        proj_name (str): Project name (use hyphens as sep!)
-        repo_dir (str, path): Path to repo within project
+        repo_dir (str, path): Path to project repo
         args.project_name (str): project name
-        args.sync (bool, optional): 
-            if True then pull template from github and sync new project repo to 
+        args.sync (bool, optional):
+            if True then pull template from github and sync new project repo to
             github as well.
         args.github_user (str): github username (if args.sync is True)
         args.github_api_token (str): github api token (if args.sync is True)
@@ -125,9 +124,9 @@ def init_repo(repo_dir, args):
 
     # if specified, create new github repo and sync
     if args.sync:
-        init_github_repo(args.project_name, args.github_user, 
+        init_github_repo(args.project_name, args.github_user,
                          args.github_api_token)
-        repo_url = f'{REMOTE_URL}/{args.project_name}.git'
+        repo_url = f'{PUSH_REMOTE_URL}/{args.project_name}.git'
         remote = repo.create_remote('origin', url=repo_url)
         remote.push(refspec='main:main')
 
@@ -154,7 +153,7 @@ def init_github_repo(project_name, github_user, github_api_token):
         "has_issues": True,
         "has_wiki": True
         }
-    
+
     req = requests.post(
         request_url,
         auth=(github_user, github_api_token),
@@ -167,21 +166,20 @@ def init_github_repo(project_name, github_user, github_api_token):
     return req
 
 
-def init_venv(proj_dir, proj_name):
+def init_venv(repo_dir):
     """Init virtual environment.
 
     Args:
-        proj_dir (str, path): Path to save project
+        repo_dir (str, path): Path to project repo
         proj_name (str): Project name (use hyphens as sep!)
     """
     current = os.getcwd()
-    os.chdir(join(proj_dir, proj_name))
+    os.chdir(repo_dir)
 
     # create venv and upgrade pip
     subprocess.call(['python', '-m', 'venv', '.venv'])
-    subprocess.call([
-        join(proj_dir, proj_name, '.venv', 'bin', 'pip'),
-        'install', '--upgrade', 'pip'])
+    subprocess.call([join(repo_dir, '.venv', 'bin', 'pip'),
+                     'install', '--upgrade', 'pip'])
 
     os.chdir(current)
 
@@ -207,7 +205,7 @@ if __name__ == "__main__":
         '-github_api_token',
         type=str,
         help='github_api_token',
-        default=os.environ.get("GITHUB_API_TOKEN"))
+        default=os.environ.get("GITHUB_TOKEN"))
     parser.add_argument(
         '-github_user',
         type=str,
