@@ -26,11 +26,11 @@ from git import Repo
 
 # # Globals
 # -----------------------------------------------------|
-TEMPLATE_REMOTE_URL = 'git@github.com:samuelgthorpe'
+TEMPLATE_REMOTE_URL = 'git@github.com:samuelgthorpe-ns'
 PUSH_REMOTE_URL = 'git@github.com:samuelgthorpe-ns'
 DEFAULT_PROJECT_DIR = join(Path.home(), 'Projects')
 DEFAULT_LOCAL_TEMPLATE = join(Path.home(), 'Templates',
-                              'st-experiment-template')
+                              'ds-experiment-template')
 
 
 
@@ -58,10 +58,15 @@ def init_repo_dir(repo_dir, args):
         args.github_user (str): github username (if args.sync is True)
         args.github_api_token (str): github api token (if args.sync is True)
     """
+    print(f'\ninitializing {repo_dir}')
     if args.sync:
         _pull_template(repo_dir, args.project_name)
     else:
-        shutil.copytree(DEFAULT_LOCAL_TEMPLATE, repo_dir)
+        shutil.copytree(DEFAULT_LOCAL_TEMPLATE, repo_dir,
+                        ignore=shutil.ignore_patterns(
+                            '.venv', '*.pyc', '__pycache__', '*.egg-info',
+                            '*pytest_cache', '.coverage', '.codex')
+                        )
 
     # delete template .git directory
     template_git_dir = join(repo_dir, '.git')
@@ -71,8 +76,8 @@ def init_repo_dir(repo_dir, args):
 def _pull_template(repo_dir, project_name):
     """Pull template from github."""
     os.makedirs(repo_dir)
-    template_url = f'{TEMPLATE_REMOTE_URL}/st-experiment-template.git'
-    Repo.clone_from(template_url, repo_dir, branch='ns-env')
+    template_url = f'{TEMPLATE_REMOTE_URL}/ds-experiment-template.git'
+    Repo.clone_from(template_url, repo_dir, branch='main')
 
 
 def update_template(repo_dir, project_name):
@@ -85,6 +90,7 @@ def update_template(repo_dir, project_name):
         repo_dir (str, path): Path to project repo
         project_name (str): Project name (use hyphens as sep!)
     """
+    print('updating experiment template')
     template_name = basename(DEFAULT_LOCAL_TEMPLATE)
     template_src_dir = template_name.replace('-', '_')
     template_src_pth = join(repo_dir, template_src_dir)
@@ -118,6 +124,7 @@ def init_repo(repo_dir, args):
         args.github_user (str): github username (if args.sync is True)
         args.github_api_token (str): github api token (if args.sync is True)
     """
+    print('initializing git repo')
     repo = Repo.init(repo_dir)
     repo.git.add(all=True)
     repo.git.commit('-m', 'init project template')
@@ -145,6 +152,7 @@ def init_github_repo(project_name, github_user, github_api_token):
     Raises:
         Exception: Description
     """
+    print('registering repo to Github')
     request_url = 'https://api.github.com/user/repos'
     payload = {
         "name": project_name,
@@ -173,6 +181,7 @@ def init_venv(repo_dir):
         repo_dir (str, path): Path to project repo
         proj_name (str): Project name (use hyphens as sep!)
     """
+    print('initializing virtual environment\n')
     current = os.getcwd()
     os.chdir(repo_dir)
 
