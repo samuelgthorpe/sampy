@@ -22,7 +22,8 @@ import shutil
 # -----------------------------------------------------|
 def main(proj_dir):
     """Run main method."""
-    codex_template = '/home/sam/Templates/codex-context'
+    user = os.environ.get('USER')
+    codex_template = f'/home/{user}/Templates/codex-context'
     codex_root = os.path.join(proj_dir, '.codex-context')
     if os.path.exists(codex_root) is False:
         shutil.copytree(codex_template, codex_root)
