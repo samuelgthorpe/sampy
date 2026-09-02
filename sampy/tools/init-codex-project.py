@@ -23,13 +23,25 @@ import shutil
 def main(proj_dir):
     """Run main method."""
     user = os.environ.get('USER')
-    codex_template = f'/home/{user}/Templates/codex-context'
-    codex_root = os.path.join(proj_dir, '.codex-context')
-    if os.path.exists(codex_root) is False:
-        shutil.copytree(codex_template, codex_root)
-        print('.codex-context initialized.')
-    else:
-        print('codex-context already exists. Skipping.')
+    codex_template = f'/home/{user}/Templates/codex-workflows'
+    template_objs = os.listdir(codex_template)
+
+    # confirm none of the template objects already exist in project directory
+    for obj_ in template_objs:
+        dst = os.path.join(proj_dir, obj_)
+        if os.path.exists(dst):
+            print(f'{dst} already exists. Aborting project initialization.')
+            return
+
+    # copy template objects to project directory
+    for obj_ in template_objs:
+        src = os.path.join(codex_template, obj_)
+        dst = os.path.join(proj_dir, obj_)
+        if os.path.isdir(src):
+            shutil.copytree(src, dst)
+        else:
+            shutil.copy2(src, dst)
+    print('.codex-workflow template initialized.')
 
 
 # # Main Entry
