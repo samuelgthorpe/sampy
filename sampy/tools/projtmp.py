@@ -30,7 +30,7 @@ TEMPLATE_REMOTE_URL = 'git@github.com:samuelgthorpe'
 PUSH_REMOTE_URL = 'git@github.com:samuelgthorpe'
 DEFAULT_PROJECT_DIR = join(Path.home(), 'Projects')
 DEFAULT_LOCAL_TEMPLATE = join(Path.home(), 'Repos',
-                              'ds-experiment-template')
+                              'st-experiment-template')
 
 
 
