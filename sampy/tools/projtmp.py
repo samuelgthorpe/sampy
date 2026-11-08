@@ -77,7 +77,7 @@ def _pull_template(repo_dir, project_name):
     """Pull template from github."""
     os.makedirs(repo_dir)
     template_url = f'{TEMPLATE_REMOTE_URL}/ds-experiment-template.git'
-    Repo.clone_from(template_url, repo_dir, branch='main')
+    Repo.clone_from(template_url, repo_dir, branch='ns-env')
 
 
 def update_template(repo_dir, project_name):
